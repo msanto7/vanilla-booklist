@@ -13,21 +13,7 @@ class Book {
 
 class UI {
     static displayBooks() {
-        const StoredBooks = [
-            {
-                title: 'Book One',
-                author: 'John Doe',
-                isbn: '3434434'
-            },
-            {
-                title: 'Book Two',
-                author: 'Jane Doe',
-                isbn: '45545'
-            }
-        ];
-
-
-        const books = StoredBooks;
+        const books = Store.getBooks();
 
         books.forEach((book) => UI.addBookToList(book));
     }
@@ -77,6 +63,45 @@ class UI {
 }
 
 // Store Class: Handles Local Storage
+class Store {
+
+    static getBooks() {
+        let books;
+        if (localStorage.getItem('books') === null) {
+            books = [];
+        } 
+        else {
+            books = JSON.parse(localStorage.getItem('books'));
+        }
+
+        return books;
+    }
+
+    static addBook(book) {
+        const books = Store.getBooks();
+
+        books.push(book);
+
+        localStorage.setItem('books', JSON.stringify(books));
+
+    }
+
+    static removeBook(isbn) {
+
+        const books = Store.getBooks();
+
+        books.forEach((book, index) => {
+            if (book.isbn === isbn) {
+                books.splice(index, 1);
+            }
+        });
+
+        //reset local 
+        localStorage.setItem('books', JSON.stringify(books));
+
+    }
+}
+
 
 // Event: Display Books 
 document.addEventListener('DOMContentLoaded', UI.displayBooks);
@@ -103,6 +128,9 @@ document.querySelector('#book-form').addEventListener('submit', (e) => {
         //Add Book to UI
         UI.addBookToList(book);
 
+        //Add Book to Local
+        Store.addBook(book);
+
         //Show Success Message 
         UI.showAlert('Book Added', 'success');
     
@@ -116,7 +144,12 @@ document.querySelector('#book-form').addEventListener('submit', (e) => {
 
 // Event: Remove a Book
 document.querySelector('#book-list').addEventListener('click', (e) => {
+
+    //Remove from UI
     UI.deleteBook(e.target);
+
+    //Remove from Local 
+    Store.removeBook(e.target.parentElement.previousElementSibling.textContent);
 
      //Show Success Message 
      UI.showAlert('Book Removed', 'success');
